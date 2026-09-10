@@ -45,3 +45,4 @@
 /var/home/redfox/DEV_Projekte/dynamic-dash-builder/backend/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll
 /var/home/redfox/DEV_Projekte/dynamic-dash-builder/backend/obj/Debug/net8.0/DashBuilder.Api.csproj.AssemblyReference.cache
 /var/home/redfox/DEV_Projekte/dynamic-dash-builder/backend/obj/Debug/net8.0/DashBuilder.Api.csproj.CopyComplete
+/var/home/redfox/DEV_Projekte/dynamic-dash-builder/backend/obj/Debug/net8.0/DashBuilder.Api.sourcelink.json

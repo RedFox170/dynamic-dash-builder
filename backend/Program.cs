@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DashBuilder.Api.Data;
+using DashBuilder.Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,5 +38,7 @@ var app = builder.Build();
 // Erst Auth prüfen, dann Authorisierung
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapAuthEndpoints();
 
 app.Run();
