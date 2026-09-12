@@ -1,26 +1,26 @@
-// Repräsentiert einen Widget-Eintrag auf dem Dashboard eines Users.
-// Steuert welche Widgets aktiv sind, in welcher Reihenfolge und mit welcher Config.
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace DashBuilder.Api.Models;
 
 public class DashboardWidget
 {
-    // PK
     public Guid Id { get; set; }
 
-    // FK
+    [Column("user_id")]
     public Guid UserId { get; set; }
 
-    // Welcher Widget-Typ: 'notes', 'todo', 'weather', 'time', 'test'
+    [Column("widget_type")]
     public string WidgetType { get; set; } = string.Empty;
 
-    // Position im Grid – wo auf dem Canvas hängt das Widget?
+    [Column("grid_column")]
     public int GridColumn { get; set; }
+
+    [Column("grid_row")]
     public int GridRow { get; set; }
 
-    // Ein-/ausgeblendet
+    [Column("is_active")]
     public bool IsActive { get; set; } = true;
 
-    // Nur für das Wetter-Widget relevant, bei allen anderen null
+    [Column("weather_city")]
     public string? WeatherCity { get; set; }
-
 }

@@ -18,7 +18,8 @@ CREATE TABLE dashboard_widgets (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     widget_type     TEXT NOT NULL, -- 'notes' | 'todo' | 'weather' | 'time' | 'test'
-    position        INT NOT NULL,
+    grid_column     INT NOT NULL,
+    grid_row        INT NOT NULL,
     is_active       BOOL NOT NULL DEFAULT true,
     weather_city    TEXT
 );
