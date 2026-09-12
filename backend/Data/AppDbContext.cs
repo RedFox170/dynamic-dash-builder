@@ -24,4 +24,19 @@ public class AppDbContext : DbContext
 
     // todos-Tabelle
     public DbSet<Todo> Todos => Set<Todo>();
+
+    // KI Hilfe:: EF Core generiert standardmäßig Tabellennamen mit Großbuchstaben (z.B. "Users")
+    // PostgreSQL ist case-sensitive – hier sagen wir EF Core explizit wie die Tabellen wirklich heißen
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>().ToTable("users");
+        modelBuilder.Entity<DashboardWidget>().ToTable("dashboard_widgets");
+        modelBuilder.Entity<Note>().ToTable("notes");
+        modelBuilder.Entity<Todo>().ToTable("todos");
+
+        // Alle Spaltennamen auf lowercase mappen
+    foreach (var entity in modelBuilder.Model.GetEntityTypes())
+        foreach (var property in entity.GetProperties())
+            property.SetColumnName(property.GetColumnName().ToLower());
+    }
 }

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace DashBuilder.Api.Models;
 
 // Repräsentiert einen ToDo-Eintrag – gehört immer einem User
@@ -6,7 +8,7 @@ public class Todo
     // PK
     public Guid Id { get; set; }
 
-    // FK
+    [Column("user_id")]
     public Guid UserId { get; set; }
 
     // Überschrift

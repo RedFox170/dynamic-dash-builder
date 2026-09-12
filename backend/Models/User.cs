@@ -1,5 +1,8 @@
 // Models beschreiben wie ein Datensatz aus der DB in C# aussieht.
 // Entity Framework nutzt diese Klasse um auf die "users"-Tabelle zuzugreifen.
+using System.ComponentModel.DataAnnotations.Schema;
+
+
 namespace DashBuilder.Api.Models;
 
 public class User
@@ -8,5 +11,6 @@ public class User
 
     public string Username { get; set; } = string.Empty;
 
+    [Column("password_hash")]
     public string PasswordHash { get; set; } = string.Empty;
 }
