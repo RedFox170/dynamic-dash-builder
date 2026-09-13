@@ -57,5 +57,6 @@ app.MapAuthEndpoints();
 app.MapDashboardEndpoints();
 app.MapNoteEndpoints();
 app.MapTodoEndpoints();
+app.MapWidgetEndpoints();
 
 app.Run();
