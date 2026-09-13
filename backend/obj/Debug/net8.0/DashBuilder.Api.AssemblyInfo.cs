@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DashBuilder.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+581e9d6e9624c2e3c1e50fe00d6bfee5ec6e7424")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ceb6351ac42411d43c7926f8254ae52ffd35e23b")]
 [assembly: System.Reflection.AssemblyProductAttribute("DashBuilder.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DashBuilder.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

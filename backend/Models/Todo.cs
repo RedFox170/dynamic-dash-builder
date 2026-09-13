@@ -11,6 +11,9 @@ public class Todo
     [Column("user_id")]
     public Guid UserId { get; set; }
 
+    [Column("widget_id")]
+    public Guid WidgetId { get; set; }
+
     // Überschrift
     public string Header { get; set; } = string.Empty;
 

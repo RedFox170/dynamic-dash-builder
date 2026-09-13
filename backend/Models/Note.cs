@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DashBuilder.Api.Models;
 
-// Notiz – gehört immer einem User
+// Notiz – gehört immer einem User und einem Widget
 public class Note
 {
     // PK
@@ -10,6 +10,9 @@ public class Note
 
     [Column("user_id")]
     public Guid UserId { get; set; }
+
+    [Column("widget_id")]
+    public Guid WidgetId { get; set; }
 
     // Überschrift
     public string Header { get; set; } = string.Empty;
