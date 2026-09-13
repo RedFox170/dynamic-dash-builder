@@ -1,6 +1,6 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
-import { buttonStyles, glassCardStyles } from './styles/shared-styles'
+import { buttonStyles, glassCardStyles } from '../styles/shared-styles'
 
 // URL zu deinem Backend – später ggf. in eine Config auslagern
 const API_URL = 'http://localhost:5175'

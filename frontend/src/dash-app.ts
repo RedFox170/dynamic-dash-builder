@@ -1,6 +1,7 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
-import './dash-login'
+import './components/dash-login'
+import './canvas/dash-canvas'
 
 @customElement('dash-app')
 export class DashApp extends LitElement {
@@ -26,7 +27,7 @@ export class DashApp extends LitElement {
   render() {
     // Bedingtes Rendering – zeig Login ODER das Dashboard, nie beides
     return this.isLoggedIn
-      ? html`<p>Eingeloggt! Dashboard kommt hier hin.</p>`
+      ? html`<dash-canvas></dash-canvas>`
       : html`<dash-login></dash-login>`
   }
 

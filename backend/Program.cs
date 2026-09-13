@@ -7,6 +7,17 @@ using DashBuilder.Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// CORS erlauben – Frontend (5173) und Backend (5175) sind unterschiedliche Origins
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // Datenbankverbindung registrieren
 // EF Core liest den Connection String aus appsettings.json
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -33,6 +44,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+// Muss vor Authentication/Authorization stehen (CORS)
+app.UseCors("AllowFrontend");
 
 // Middleware – Reihenfolge ist wichtig!
 // Erst Auth prüfen, dann Authorisierung

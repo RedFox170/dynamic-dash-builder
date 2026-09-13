@@ -27,6 +27,7 @@ CREATE TABLE dashboard_widgets (
 CREATE TABLE notes (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    widget_id       UUID NOT NULL REFERENCES dashboard_widgets(id) ON DELETE CASCADE,
     header          TEXT NOT NULL,
     note            TEXT
 );
@@ -34,9 +35,10 @@ CREATE TABLE notes (
 CREATE TABLE todos (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    widget_id       UUID NOT NULL REFERENCES dashboard_widgets(id) ON DELETE CASCADE,
     header          TEXT NOT NULL,
     text            TEXT,
-    prio            TEXT NOT NULL DEFAULT 'mittel', -- 'niedrig' | 'mittel' | 'hoch'
+    prio            TEXT NOT NULL DEFAULT 'mittel',
     erledigt        BOOL NOT NULL DEFAULT false,
     erinnerung      TIMESTAMP
 );
