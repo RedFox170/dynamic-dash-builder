@@ -22,7 +22,17 @@ export class DashCanvas extends LitElement {
   @state()
   private loading = true
 
-  private draggedWidgetId: string | null = null
+  @state()
+  private draggingWidgetId: string | null = null
+
+  @state()
+  private dragOffset = { x: 0, y: 0 }
+
+  @state()
+  private confirmDeleteWidgetId: string | null = null
+
+  private dragStartX = 0
+  private dragStartY = 0
 
   connectedCallback() {
     super.connectedCallback()
@@ -58,20 +68,39 @@ export class DashCanvas extends LitElement {
     }
   }
 
-  private _onDragStart(widgetId: string) {
-    this.draggedWidgetId = widgetId
+  private _onHandlePointerDown(e: PointerEvent, widgetId: string) {
+    // Nur linke Maustaste / primärer Touch-Kontakt
+    if (e.button !== undefined && e.button !== 0) return
+    e.preventDefault()
+
+    this.draggingWidgetId = widgetId
+    this.dragStartX = e.clientX
+    this.dragStartY = e.clientY
+    this.dragOffset = { x: 0, y: 0 }
+
+    window.addEventListener('pointermove', this._onPointerMove)
+    window.addEventListener('pointerup', this._onPointerUp)
   }
 
-  private _onDragOver(e: DragEvent) {
-    e.preventDefault()
+  private _onPointerMove = (e: PointerEvent) => {
+    if (!this.draggingWidgetId) return
+    this.dragOffset = {
+      x: e.clientX - this.dragStartX,
+      y: e.clientY - this.dragStartY,
+    }
   }
 
-  // Drop passiert jetzt auf dem GESAMTEN Grid, nicht mehr nur auf einem Widget
-  private async _onGridDrop(e: DragEvent) {
-    e.preventDefault()
-    const sourceId = this.draggedWidgetId
-    this.draggedWidgetId = null
+  private _onPointerUp = async (e: PointerEvent) => {
+    window.removeEventListener('pointermove', this._onPointerMove)
+    window.removeEventListener('pointerup', this._onPointerUp)
+
+    const sourceId = this.draggingWidgetId
+    this.draggingWidgetId = null
+    this.dragOffset = { x: 0, y: 0 }
     if (!sourceId || !this.data) return
+
+    const source = this.data.widgets.find((w) => w.id === sourceId)
+    if (!source) return
 
     // Maus-Position relativ zum Grid-Container in Spalte/Zeile umrechnen
     const gridEl = this.shadowRoot!.querySelector('.grid') as HTMLElement
@@ -82,26 +111,41 @@ export class DashCanvas extends LitElement {
     const targetColumn = Math.max(0, Math.floor(x / STEP))
     const targetRow = Math.max(0, Math.floor(y / STEP))
 
-    const source = this.data.widgets.find((w) => w.id === sourceId)
-    if (!source) return
+    if (targetColumn === source.gridColumn && targetRow === source.gridRow) return
 
     // Prüfen ob die Zielzelle schon von einem anderen Widget belegt ist
     const occupant = this.data.widgets.find(
       (w) => w.id !== sourceId && w.gridColumn === targetColumn && w.gridRow === targetRow
     )
 
+    // Optimistisches lokales Update, damit die UI sofort reagiert
+    const sourceOrigin = { column: source.gridColumn, row: source.gridRow }
+    source.gridColumn = targetColumn
+    source.gridRow = targetRow
     if (occupant) {
-      // Belegt -> Positionen tauschen
+      occupant.gridColumn = sourceOrigin.column
+      occupant.gridRow = sourceOrigin.row
+    }
+    this.data = { ...this.data, widgets: [...this.data.widgets] }
+
+    if (occupant) {
       await Promise.all([
         this._updateWidgetPosition(source, targetColumn, targetRow),
-        this._updateWidgetPosition(occupant, source.gridColumn, source.gridRow),
+        this._updateWidgetPosition(occupant, sourceOrigin.column, sourceOrigin.row),
       ])
     } else {
-      // Frei -> Widget einfach dorthin verschieben
       await this._updateWidgetPosition(source, targetColumn, targetRow)
     }
+  }
 
-    this._loadDashboard()
+  private async _deleteWidget(widgetId: string) {
+    const token = localStorage.getItem('token')
+    await fetch(`${API_URL}/api/widgets/${widgetId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    this.confirmDeleteWidgetId = null
+    await this._loadDashboard()
   }
 
   private async _updateWidgetPosition(widget: any, gridColumn: number, gridRow: number) {
@@ -126,28 +170,52 @@ export class DashCanvas extends LitElement {
     if (!this.data) return html`<p>Fehler beim Laden.</p>`
 
     return html`
-      <div
-        class="grid"
-        @dragover=${this._onDragOver}
-        @drop=${this._onGridDrop}
-      >
+      <div class="grid">
         ${this.data.notes.map((note) => {
           const widget = this.data!.widgets.find((w) => w.id === note.widgetId)
           if (!widget) return ''
 
+          const isDragging = this.draggingWidgetId === widget.id
+          const style = isDragging
+            ? `grid-column: ${widget.gridColumn + 1}; grid-row: ${widget.gridRow + 1}; transform: translate(${this.dragOffset.x}px, ${this.dragOffset.y}px);`
+            : `grid-column: ${widget.gridColumn + 1}; grid-row: ${widget.gridRow + 1};`
+
           return html`
-            <div
-              class="cell"
-              style="grid-column: ${widget.gridColumn + 1}; grid-row: ${widget.gridRow + 1}"
-            >
+            <div class="cell ${isDragging ? 'dragging' : ''}" style="${style}">
               <div
                 class="handle"
-                draggable="true"
-                @dragstart=${() => this._onDragStart(widget.id)}
+                @pointerdown=${(e: PointerEvent) => this._onHandlePointerDown(e, widget.id)}
               >
                 ⠿
               </div>
+              <button
+                class="trash"
+                @click=${() => (this.confirmDeleteWidgetId = widget.id)}
+              >
+                🗑
+              </button>
               <widget-notes .note=${note}></widget-notes>
+              ${this.confirmDeleteWidgetId === widget.id
+                ? html`
+                    <div class="confirm-overlay">
+                      <p>Notiz wirklich löschen?</p>
+                      <div class="confirm-actions">
+                        <button
+                          class="confirm-yes"
+                          @click=${() => this._deleteWidget(widget.id)}
+                        >
+                          Ja
+                        </button>
+                        <button
+                          class="confirm-no"
+                          @click=${() => (this.confirmDeleteWidgetId = null)}
+                        >
+                          Nein
+                        </button>
+                      </div>
+                    </div>
+                  `
+                : ''}
             </div>
           `
         })}
@@ -179,6 +247,13 @@ export class DashCanvas extends LitElement {
       position: relative;
     }
 
+    .cell.dragging {
+      z-index: 100;
+      cursor: grabbing;
+      pointer-events: none;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
     .handle {
       position: absolute;
       top: 4px;
@@ -193,6 +268,8 @@ export class DashCanvas extends LitElement {
       cursor: grab;
       z-index: 10;
       border-radius: 4px;
+      touch-action: none;
+      pointer-events: auto;
     }
 
     .handle:hover {
@@ -201,6 +278,82 @@ export class DashCanvas extends LitElement {
 
     .handle:active {
       cursor: grabbing;
+    }
+
+    .trash {
+      position: absolute;
+      top: 4px;
+      right: 32px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 10;
+      border-radius: 4px;
+      padding: 0;
+    }
+
+    .trash:hover {
+      background: rgba(255, 80, 80, 0.25);
+      color: white;
+    }
+
+    .confirm-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(20, 20, 20, 0.85);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      color: white;
+    }
+
+    .confirm-overlay p {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .confirm-actions button {
+      padding: 6px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .confirm-yes {
+      background: #e03131;
+      color: white;
+    }
+
+    .confirm-yes:hover {
+      background: #c92a2a;
+    }
+
+    .confirm-no {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+    }
+
+    .confirm-no:hover {
+      background: rgba(255, 255, 255, 0.25);
     }
   `
 }
